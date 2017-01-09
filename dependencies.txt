@@ -1,0 +1,2 @@
+https://pypi.python.org/packages/fe/f6/da82dee704be089b6c3f5a7eb17a5f7c67e4fb6d030405dde392dc846714/python-etcd-0.4.3.tar.gz python-etcd
+https://pypi.python.org/packages/95/d9/c3336b6b5711c3ab9d1d3a80f1a3e2afeb9d8c02a7166462f6cc96570897/click-6.7.tar.gz#md5=fc4cc00c4863833230d3af92af48abd4a click
