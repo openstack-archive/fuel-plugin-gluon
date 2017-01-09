@@ -1,0 +1,5 @@
+# szilard.cserey@nokia-bell-labs.com
+attributes:
+  metadata:
+    restrictions:
+      - "cluster:net_provider != 'neutron'": "Neutron only"
