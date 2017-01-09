@@ -1,0 +1,10 @@
+# Override file for etcd Upstart script providing some environment variables
+env ETCD_INITIAL_CLUSTER="etcd-01=http://controller1:2380"
+env ETCD_INITIAL_CLUSTER_STATE="new"
+env ETCD_INITIAL_CLUSTER_TOKEN="etcd-cluster-1"
+env ETCD_INITIAL_ADVERTISE_PEER_URLS="http://controller1:2380"
+env ETCD_DATA_DIR="/var/lib/etcd"
+env ETCD_LISTEN_PEER_URLS="http://controller1:2380"
+env ETCD_LISTEN_CLIENT_URLS="http://controller1:2379,http://127.0.0.1:2379"
+env ETCD_ADVERTISE_CLIENT_URLS="http://controller1:2379"
+env ETCD_NAME="etcd-01"
