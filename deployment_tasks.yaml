@@ -1,0 +1,63 @@
+# szilard.cserey@nokia-bell-labs.com
+- id: gluon
+  type: group
+  role: [gluon]
+  requires: [deploy_start]
+  required_for: [deploy_end, primary-controller, controller]
+  tasks: [hiera, setup_repositories, fuel_pkgs, globals, tools, logging, netconfig, gluon_install]
+  parameters:
+    strategy:
+      type: parallel
+
+- id: etcd
+  type: puppet
+  version: 0.0.1
+  groups: [primary-controller, controller, gluon]
+  required_for: [gluon_install]
+  requires: [deploy_start, openstack-network-end]
+  parameters:
+    puppet_manifest: puppet/manifests/gluon-etcd.pp
+    puppet_modules: puppet/modules:/etc/puppet/modules
+    timeout: 700
+
+- id: gluon_install
+  type: puppet
+  version: 0.0.1
+  groups: [gluon]
+  requires: [etcd]
+  required_for: [gluon_post]
+  parameters:
+    puppet_manifest: puppet/manifests/gluon-install.pp
+    puppet_modules: puppet/modules:/etc/puppet/modules
+    timeout: 700
+
+- id: gluon_post
+  type: puppet
+  version: 0.0.1
+  groups: [gluon]
+  requires: [gluon_install]
+  required_for: [gluon_neutron_config]
+  parameters:
+    puppet_manifest: puppet/manifests/gluon-post.pp
+    puppet_modules: puppet/modules:/etc/puppet/modules
+    timeout: 700
+
+- id: gluon_neutron_config
+  type: puppet
+  version: 0.0.1
+  groups: [gluon]
+  requires: [gluon_post]
+  parameters:
+    puppet_manifest: puppet/manifests/gluon-neutron-config.pp
+    puppet_modules: puppet/modules:/etc/puppet/modules
+    timeout: 700
+
+#- id: check_etcd_cluster
+#  type: puppet
+#  version: 0.0.1
+#  groups: [gluon]
+#  requires: [gluon_post]
+#  parameters:
+#    puppet_manifest: puppet/manifests/gluon-check-etcd-cluster.pp
+#    puppet_modules: puppet/modules:/etc/puppet/modules
+#    timeout: 700

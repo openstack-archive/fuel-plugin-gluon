@@ -1,0 +1,6 @@
+*.rpm
+*.deb
+.build/
+.cache/
+tmp/
+
