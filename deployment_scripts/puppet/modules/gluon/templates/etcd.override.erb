@@ -1,0 +1,25 @@
+# Override file for etcd Upstart script providing some environment variables
+<%
+config=''
+current=''
+@controller_ips['all'].each_with_index do |ip, i|
+  if ip[0].length == 1 then
+    ip[0] = '0' + ip[0]
+  end
+  if @controller_ips['current'].eql? ip[1] then
+    current = ip[0]
+  end
+  config << "etcd-" + ip[0] + "=http://" + ip[1] + ":2380"
+  if i < (@controller_ips['all'].size - 1) then
+    config << ','
+  end
+end -%>
+env ETCD_INITIAL_CLUSTER="<%= config %>"
+env ETCD_INITIAL_CLUSTER_STATE="new"
+env ETCD_INITIAL_CLUSTER_TOKEN="etcd-cluster-01"
+env ETCD_INITIAL_ADVERTISE_PEER_URLS="http://<%= @controller_ips['current'] %>:2380"
+env ETCD_DATA_DIR="/var/lib/etcd"
+env ETCD_LISTEN_PEER_URLS="http://<%= @controller_ips['current'] %>:2380"
+env ETCD_LISTEN_CLIENT_URLS="http://<%= @controller_ips['current'] %>:2379,http://127.0.0.1:2379"
+env ETCD_ADVERTISE_CLIENT_URLS="http://<%= @controller_ips['current'] %>:2379"
+env ETCD_NAME="etcd-<%= current %>"
