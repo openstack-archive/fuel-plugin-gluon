@@ -1,0 +1,111 @@
+#!/bin/bash
+
+# Add here any the actions which are required before plugin build
+# like packages building, packages downloading from mirrors and so on.
+# The script should return 0 if there were no errors.
+set -eux
+CACHE=${CACHE:-false}
+RENEW=${RENEW:-false}
+DIR="$(dirname `readlink -f $0`)"
+
+if [ "$CACHE" == true ];then
+  export cache_dir=$DIR/.cache/;
+  if [ -e $cache_dir ] && [[ "$RENEW" == false ]];then
+    export GLUON_REPO=$cache_dir/netready/gluon/;
+  fi
+fi
+
+GLUON_REPO="https://github.com/openstack/gluon.git"
+
+# Version number used in deb/rpm package
+GLUON_VERSION_NUMBER=${GLUON_VERSION_NUMBER:-0.0.1}
+GLUON_DESCRIPTION="Gluon"
+GLUON_BRANCH=${GLUON_BRANCH:-'master'}
+
+# For which systems gluon package should be build
+BUILD_FOR=${BUILD_FOR:-ubuntu}
+
+TMP_DIR="${DIR}/tmp"
+MODULES="${DIR}/deployment_scripts/puppet/modules"
+
+#Remove temporary files
+CLEANUP=${CLEANUP:-true}
+
+
+function cleanup {
+  rm -rf "${TMP_DIR}"
+}
+
+function clone_git_repo {
+  git clone $1
+  if [[ ! -z "${3:-}" ]] && [[ "$3" != "master" ]]; then
+    pushd $2
+    git checkout $3
+    popd
+  fi
+}
+
+function download_dependencies {
+  while IFS='\n' read -r line || [[ -n "$line" ]]; do
+    if [[ ! -z $line ]]; then
+      IFS=' ' read -ra arr <<< $line
+      wget "${arr[0]}" -O "${arr[1]}.tar.gz"
+      mkdir "${arr[1]}"
+      tar xvfz "${arr[1]}.tar.gz" -C "${arr[1]}" --strip-components=1
+      rm "${arr[1]}.tar.gz"
+    fi
+  done < "$1"
+}
+
+function build_pkg {
+  # clean up
+  rm -rf ${DIR}/repositories/${1}/*
+  case $1 in
+    centos)
+      pushd "${DIR}/repositories/${1}/"
+      #fpm --force -s dir -t rpm --version "${GLUON_VERSION_NUMBER}" --description "${GLUON_DESCRIPTION}" --prefix /opt/opendaylight --rpm-init "${DIR}/gluon_package/${1}/gluon" --after-install "${DIR}/gluon_package/${1}/gluon-post" --name gluon  -C "${TMP_DIR}/gluon"
+      #fpm --architecture all --force -s python -t rpm -m 'szilard.cserey@nokia-bell-labs.com' --python-install-lib /usr/lib/python2.7/dist-packages ${TMP_DIR}/gluon/setup.py
+      popd
+      ;;
+    ubuntu)
+      pushd "${DIR}/repositories/${1}/"
+      #fpm --architecture all --force -s python -t deb -m 'szilard.cserey@nokia-bell-labs.com' --version "${GLUON_VERSION_NUMBER}" --description "${GLUON_DESCRIPTION}" --deb-upstart "${DIR}/gluon_package/${1}/gluon" --after-install "${DIR}/gluon_package/${1}/gluon-post" --name gluon --python-install-lib /usr/lib/python2.7/dist-packages -d git ${TMP_DIR}/gluon/setup.py
+      fpm --architecture all --force -s dir -t deb -m 'szilard.cserey@nokia-bell-labs.com' --version "${GLUON_VERSION_NUMBER}" --description "${GLUON_DESCRIPTION}" --prefix /opt/netready --name netready -C "${TMP_DIR}/netready"
+      popd
+      ;;
+    *) echo "Not supported system"; exit 1;;
+  esac
+}
+
+
+# *********************************************** MAIN ***********************************************
+
+command -v fpm >/dev/null 2>&1 || { echo >&2 "fpm ruby gem required but it's not installed.  Aborting."; exit 1; }
+
+cleanup
+
+mkdir -p "${TMP_DIR}/netready"
+
+pushd "$TMP_DIR/netready"
+
+clone_git_repo "$GLUON_REPO" "gluon"
+download_dependencies "${DIR}/dependencies.txt"
+
+popd
+
+for system in $BUILD_FOR
+do
+  build_pkg $system
+done
+
+if [ "$CACHE" == true ];then
+  if [ ! -e $cache_dir ] || [[ "$RENEW" == true ]];then
+    rm -rf $cache_dir
+    mkdir -p $cache_dir
+    cp -r ${TMP_DIR}/* ${cache_dir}/
+  fi
+fi
+
+if [ "$CLEANUP" != false ];then
+  cleanup
+fi

@@ -1,0 +1,14 @@
+[Unit]
+Description=Proton Server
+After=syslog.target network.target
+
+[Service]
+Type=notify
+NotifyAccess=all
+TimeoutStartSec=0
+Restart=always
+User=proton
+ExecStart=/usr/bin/proton-server --config-file /etc/proton/proton.conf --log-file=/var/log/proton/proton-server.log
+
+[Install]
+WantedBy=multi-user.target

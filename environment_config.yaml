@@ -1,0 +1,4 @@
+attributes:
+  metadata:
+    restrictions:
+      - "cluster:net_provider != 'neutron'": "Neutron only"
