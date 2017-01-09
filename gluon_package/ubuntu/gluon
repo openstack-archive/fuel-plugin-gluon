@@ -1,0 +1,17 @@
+# vim:set ft=upstart ts=2 et:
+description "Proton Server"
+author "szilard.cserey@nokia-bell-labs.com"
+
+start on runlevel [2345]
+stop on runlevel [!2345]
+
+setgid proton
+setuid proton
+
+script
+  export PROTON_BIN="/usr/bin/proton-server"
+  export PROTON_CONF="/etc/proton/proton.conf"
+  export PROTON_LOG="/var/log/proton/proton-server.log"
+  export PROTON_OPTS="--config-file ${PROTON_CONF} --log-file=${PROTON_LOG}"
+  exec $PROTON_BIN $PROTON_OPTS
+end script

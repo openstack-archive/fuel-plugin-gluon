@@ -1,0 +1,24 @@
+- id: gluon
+  type: group
+  role: [gluon]
+  requires: [deploy_start]
+  required_for: [deploy_end, primary-controller, controller]
+  tasks: [hiera, setup_repositories, fuel_pkgs, globals, tools, logging, netconfig, gluon_install]
+  parameters:
+    strategy:
+      type: parallel
+
+
+- id: gluon_install
+  type: puppet
+  version: 0.0.1
+  groups: [gluon]
+  requires: [deploy_start]
+  required_for: [openstack-network-start]
+  requires: [hosts, firewall, globals, netconfig]
+  condition:
+    yaql_exp: changedAny($.network_metadata.vips.get('management'), $.gluon)
+  parameters:
+    puppet_manifest: puppet/manifests/gluon-install.pp
+    puppet_modules: puppet/modules:/etc/puppet/modules
+    timeout: 720

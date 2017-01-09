@@ -1,0 +1,13 @@
+#!/bin/sh
+set -e
+
+#mkdir /etc/proton
+#touch /etc/proton/proton.conf
+
+#cat > /etc/proton/proton.conf <<EOF
+#[DEFAULT]
+#state_path = /opt/proton
+#EOF
+
+#chown -R proton:proton /etc/proton
+#chmod -R go+w /etc/proton
